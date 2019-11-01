@@ -12,7 +12,9 @@
 #include <string.h>
 #include <vector>
 
-void execute(const char* part, const double kappa, const double C2, const double lnX0, const double lnX1)
+void spatial(const char* part, const double kappa, const double C2,
+			 const double lnX0, const double lnX1, const double dlnX,
+			 const double dt)
 {
 	int rank = 0;
 	#ifdef MPI_VERSION
@@ -22,10 +24,10 @@ void execute(const char* part, const double kappa, const double C2, const double
 	if (rank == 0)
 		std::cout << "Running Part " << char(*part - 32) << std::endl;
 
-	std::string logfile = std::string("bm7") + std::string(part) + std::string(".log");
+	std::string prefix = std::string("bm7") + std::string(part);
 
 	std::ofstream ofs;
-	ofs.open(logfile.c_str());
+	ofs.open((prefix + std::string(".csv")).c_str());
 
 	if (rank == 0) {
 		ofs << "NX,"
@@ -40,6 +42,7 @@ void execute(const char* part, const double kappa, const double C2, const double
 
 	std::vector<double> E, R;
 	double lnX(lnX0);
+	const int increment = floor(1.0 + 8.0 / dt);
 
 	while (lnX > lnX1) {
 		const unsigned NX = std::exp(lnX);
@@ -63,10 +66,7 @@ void execute(const char* part, const double kappa, const double C2, const double
 		// construct grid object
 		GRID2D grid(filename);
 
-		double dt = MMSP::timestep(grid, kappa);
-		const int increment = floor(1.0 + 8.0 / dt);
-
-		const double elapsed = MMSP::update(grid, increment, kappa, C2);
+		const double elapsed = MMSP::update(grid, increment, dt, kappa, C2);
 
 		const double l2 = MMSP::analyze(grid, elapsed, kappa, C2);
 
@@ -95,8 +95,11 @@ void execute(const char* part, const double kappa, const double C2, const double
 			    << std::endl;
 		}
 
-		lnX *= 0.99375;
+		lnX *= dlnX;
 	}
+
+	ofs.close();
+	ofs.open((prefix + std::string(".log")).c_str());
 
 	if (rank == 0) {
 		double p, b, cov00, cov01, cov11, sumsq;
@@ -110,8 +113,6 @@ void execute(const char* part, const double kappa, const double C2, const double
 		    << cov00 << '\t' << cov01 << '\t' << cov11
 		    << std::endl;
 	}
-
-	ofs.close();
 }
 
 int main(int argc, char* argv[])
@@ -128,23 +129,29 @@ int main(int argc, char* argv[])
 	}
 
 	if (*part == char(97)) {
-		double kappa = 4.0e-4;
-		double C2 = 0.0625 * M_PI;
-		double lnX0 = 5.9;
-		double lnX1 = 5.0;
-		execute(part, kappa, C2, lnX0, lnX1);
+		const double kappa = 4.0e-4;
+		const double C2 = 0.0625 * M_PI;
+		const double lnX0 = 5.5219;
+		const double lnX1 = 3.1638;
+		const double dlnX = 0.975;
+		const double dt = 2.0e-4;
+		spatial(part, kappa, C2, lnX0, lnX1, dlnX, dt);
 	} else if (*part == char(98)) {
-		double kappa = 1.5625e-6;
-		double C2 = 0.0625 * M_PI;
-		double lnX0 = 5.83;
-		double lnX1 = 5.3;
-		execute(part, kappa, C2, lnX0, lnX1);
+		const double kappa = 1.5625e-6;
+		const double C2 = 0.0625 * M_PI;
+		const double lnX0 = 5.5219;
+		const double lnX1 = 3.1638;
+		const double dlnX = 0.975;
+		const double dt = 2.0e-4;
+		spatial(part, kappa, C2, lnX0, lnX1, dlnX, dt);
 	}  else if (*part == char(99)) {
-		double kappa = 0.0004;
-		double C2 = 0.5;
-		double lnX0 = 5.83;
-		double lnX1 = 5.3;
-		execute(part, kappa, C2, lnX0, lnX1);
+		const double kappa = 0.0004;
+		const double C2 = 0.5;
+		const double lnX0 = 5.5219;
+		const double lnX1 = 3.1638;
+		const double dlnX = 0.975;
+		const double dt = 2.0e-4;
+		spatial(part, kappa, C2, lnX0, lnX1, dlnX, dt);
 	} else {
 		std::cerr << "Error: Undefined argument \"" << argv[1] << "\": is it lower-case?" << std::endl;
 	}

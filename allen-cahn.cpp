@@ -16,38 +16,38 @@ const double A1 = 0.0075;
 const double B1 = 8.0 * M_PI;
 const double A2 = 0.03;
 const double B2 = 22.0 * M_PI;
-const double LinStab = 0.1;
+const double LinStab = 0.2;
+
+using std::cos;
+using std::sin;
+using std::tanh;
 
 namespace MMSP
 {
 
 double sech(const double z)
 {
-	return 1.0 / std::cosh(z);
+	return 1.0 / cosh(z);
 }
 
 double source(const double x, const double y, const double t, const double kappa, const double C2)
 {
-	const double da_dx = A1 * B1 * std::cos(B1 * x)
-	                   + A2 * B2 * std::cos(B2 * x + C2 * t);
-	const double d2a_dx2 =-A1 * B1 * B1 * std::sin(B1 * x)
-	                     - A2 * B2 * B2 * std::sin(B2 * x + C2 * t);
-	const double da_dt = A1 * std::sin(B1 * x)
-		+ A2 * C2 * std::cos(B2 * x + C2 * t);
+	const double da_dx = A1 * B1 * t * cos(B1 * x)
+	                   + A2 * B2 * cos(B2 * x + C2 * t);
+	const double d2a_dx2 =-A1 * B1 * B1 * t * sin(B1 * x)
+	                     - A2 * B2 * B2 * sin(B2 * x + C2 * t);
+	const double da_dt = A1 * sin(B1 * x)
+	                   + A2 * C2 * cos(B2 * x + C2 * t);
 
 	const double arg = (y - alpha(A1, A2, B1, B2, C2, t, x)) / std::sqrt(2.0 * kappa);
-	const double prefix = std::pow(sech(arg), 2.0)
-		                  / std::sqrt(16.0 * kappa);
-	return prefix * (-2.0 * std::tanh(arg) * da_dx * da_dx
+	const double prefix = sech(arg) * sech(arg) / std::sqrt(16.0 * kappa);
+	return prefix * (-std::sqrt(4.0 * kappa) * tanh(arg) * da_dx * da_dx
 					+ M_SQRT2 * (da_dt - kappa * d2a_dx2));
 }
 
-template<int dim, typename T>
-double timestep(grid<dim,T>& Grid, const double kappa)
+double timestep(const double dx, const double kappa)
 {
-	double dV = 1.0;
-	for (int d = 0; d < dim; d++)
-		dV *= dx(Grid, d);
+	double dV = dx * dx;
 	return LinStab * dV / kappa;
 }
 
@@ -122,14 +122,13 @@ void generate(int dim, const char* filename, const int L, const double kappa, co
 		bc(initGrid);
 
 		output(initGrid,filename);
-		double dt = timestep(initGrid, kappa);
 	} else {
 		std::cerr << "Error: PFHub Benchmark 7 is 2-D, only." << std::endl;
 	}
 }
 
 template <int dim, typename T>
-double update(grid<dim,T>& Grid, const unsigned steps, const double kappa, const double C2)
+double update(grid<dim,T>& Grid, const unsigned steps, const double dt, const double kappa, const double C2)
 {
 	int rank=0;
 	#ifdef MPI_VERSION
@@ -140,7 +139,6 @@ double update(grid<dim,T>& Grid, const unsigned steps, const double kappa, const
 
 	grid<dim,T> newGrid(Grid);
 
-	double dt = timestep(Grid, kappa);
 	double elapsed = 0.0;
 
 	for (int step = 0; step < steps; step++) {
@@ -153,7 +151,8 @@ double update(grid<dim,T>& Grid, const unsigned steps, const double kappa, const
 			double y = dx(Grid, 1) * r[1];
 			T phi = Grid(n);
 			newGrid(n) = phi + dt * (- 4 * phi * (phi - 1) * (phi - 0.5) + kappa * laplacian(Grid, n)
-			                         + source(x, y, elapsed, kappa, C2));
+									 + S(A1, A2, B1, B2, C2, kappa, elapsed, x, y));
+			                         //+ source(x, y, elapsed, kappa, C2));
 		}
 
 		swap(Grid, newGrid);
