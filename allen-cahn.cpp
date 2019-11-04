@@ -12,11 +12,12 @@
 #include "allen-cahn.hpp"
 #include "manufactured.h"
 
+const double runtime = 8.0;
+
 const double A1 = 0.0075;
 const double B1 = 8.0 * M_PI;
 const double A2 = 0.03;
 const double B2 = 22.0 * M_PI;
-const double LinStab = 0.2;
 
 using std::cos;
 using std::sin;
@@ -24,32 +25,6 @@ using std::tanh;
 
 namespace MMSP
 {
-
-double sech(const double z)
-{
-	return 1.0 / cosh(z);
-}
-
-double source(const double x, const double y, const double t, const double kappa, const double C2)
-{
-	const double da_dx = A1 * B1 * t * cos(B1 * x)
-	                     + A2 * B2 * cos(B2 * x + C2 * t);
-	const double d2a_dx2 =-A1 * B1 * B1 * t * sin(B1 * x)
-	                      - A2 * B2 * B2 * sin(B2 * x + C2 * t);
-	const double da_dt = A1 * sin(B1 * x)
-	                     + A2 * C2 * cos(B2 * x + C2 * t);
-
-	const double arg = (y - alpha(A1, A2, B1, B2, C2, t, x)) / std::sqrt(2.0 * kappa);
-	const double prefix = sech(arg) * sech(arg) / std::sqrt(16.0 * kappa);
-	return prefix * (-std::sqrt(4.0 * kappa) * tanh(arg) * da_dx * da_dx
-	                 + M_SQRT2 * (da_dt - kappa * d2a_dx2));
-}
-
-double timestep(const double dx, const double kappa)
-{
-	double dV = dx * dx;
-	return LinStab * dV / kappa;
-}
 
 template<int dim, typename T>
 double analyze(grid<dim,T>& Grid, const double elapsed, const double kappa, const double C2)
@@ -136,6 +111,9 @@ double update(grid<dim,T>& Grid, const unsigned steps, const double dt, const do
 	#endif
 
 	ghostswap(Grid);
+
+	const double LinStab = dx(Grid, 0) * dx(Grid, 1) / kappa;
+	assert(LinStab < 1.0);
 
 	grid<dim,T> newGrid(Grid);
 

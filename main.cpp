@@ -44,7 +44,7 @@ void spatial(const char* part, const double kappa, const double C2,
 
 	std::vector<double> E, R;
 	double lnX(lnX0);
-	const int increment = floor(1.0 + 8.0 / dt);
+	const int increment = floor(1.0 + runtime / dt);
 
 	while (lnX > lnX1) {
 		const unsigned NX = std::exp(lnX);
@@ -159,7 +159,7 @@ void temporal(const char* part, const double kappa, const double C2,
 
 		const double dt = 1.0 / exp(lnT);
 		const unsigned NT = 1.0 / dt;
-		const int increment = floor(1.0 + 8.0 / dt);
+		const int increment = floor(1.0 + runtime / dt);
 
 		char filename[512];
 		sprintf(filename, "%s-%05u-ini.dat", prefix.c_str(), NT);
