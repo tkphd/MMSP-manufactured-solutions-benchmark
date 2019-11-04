@@ -122,7 +122,7 @@ void spatial(const char* part, const double kappa, const double C2,
 }
 
 void temporal(const char* part, const double kappa, const double C2,
-              const double lnX, const double lnT0, const double lnT1, const double dlnT)
+              const double dx, const double lnT0, const double lnT1, const double dlnT)
 {
 	int rank = 0;
 	#ifdef MPI_VERSION
@@ -152,7 +152,7 @@ void temporal(const char* part, const double kappa, const double C2,
 
 	std::vector<double> E, R;
 	double lnT(lnT0);
-	const unsigned NX = std::exp(lnX);
+	const unsigned NX = 1.0 / dx;
 
 	while (lnT > lnT1) {
 		auto start = std::chrono::steady_clock::now();
@@ -262,8 +262,8 @@ int main(int argc, char* argv[])
 			const double lnT0 = 9.2104;
 			const double lnT1 = 8.0;
 			const double dlnT = 0.985;
-			const double dx = 0.015625;
-			temporal(part, kappa, C2, lnT0, lnT1, dlnT, dx);
+			const double dx = 0.0015625;
+			temporal(part, kappa, C2, dx, lnT0, lnT1, dlnT);
 		}
 	} else if (*part == char(98) /* "b" */) {
 		/*
