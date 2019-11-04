@@ -157,7 +157,7 @@ void temporal(const char* part, const double kappa, const double C2,
 	while (lnT > lnT1) {
 		auto start = std::chrono::steady_clock::now();
 
-		const double dt = exp(lnT);
+		const double dt = 1.0 / exp(lnT);
 		const unsigned NT = 1.0 / dt;
 		const int increment = floor(1.0 + 8.0 / dt);
 
@@ -183,7 +183,7 @@ void temporal(const char* part, const double kappa, const double C2,
 
 		const double l2 = MMSP::analyze(grid, elapsed, kappa, C2);
 		const double lgE = std::log(l2);
-		const double lgR = std::log(dx(grid, 0));
+		const double lgR = std::log(dt);
 
 		E.push_back(lgE);
 		R.push_back(lgR);
@@ -219,11 +219,11 @@ void temporal(const char* part, const double kappa, const double C2,
 	ofs.open((prefix + std::string(".log")).c_str());
 
 	if (rank == 0) {
-		double p, b, cov00, cov01, cov11, sumsq;
-		gsl_fit_linear(R.data(), 1, E.data(), 1, R.size(), &p, &b, &cov00, &cov01, &cov11, &sumsq);
+		double b, m, cov00, cov01, cov11, sumsq;
+		gsl_fit_linear(R.data(), 1, E.data(), 1, R.size(), &b, &m, &cov00, &cov01, &cov11, &sumsq);
 
 		ofs << "log(E) = p log(R) + b:\n"
-		    << "    p = " << p << '\n'
+		    << "    p = " << m << '\n'
 		    << "    b = " << b << '\n'
 		    << "    R² = " << sumsq << '\n'
 		    << "    Covariance: "
