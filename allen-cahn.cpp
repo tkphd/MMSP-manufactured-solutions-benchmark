@@ -33,16 +33,16 @@ double sech(const double z)
 double source(const double x, const double y, const double t, const double kappa, const double C2)
 {
 	const double da_dx = A1 * B1 * t * cos(B1 * x)
-	                   + A2 * B2 * cos(B2 * x + C2 * t);
+	                     + A2 * B2 * cos(B2 * x + C2 * t);
 	const double d2a_dx2 =-A1 * B1 * B1 * t * sin(B1 * x)
-	                     - A2 * B2 * B2 * sin(B2 * x + C2 * t);
+	                      - A2 * B2 * B2 * sin(B2 * x + C2 * t);
 	const double da_dt = A1 * sin(B1 * x)
-	                   + A2 * C2 * cos(B2 * x + C2 * t);
+	                     + A2 * C2 * cos(B2 * x + C2 * t);
 
 	const double arg = (y - alpha(A1, A2, B1, B2, C2, t, x)) / std::sqrt(2.0 * kappa);
 	const double prefix = sech(arg) * sech(arg) / std::sqrt(16.0 * kappa);
 	return prefix * (-std::sqrt(4.0 * kappa) * tanh(arg) * da_dx * da_dx
-					+ M_SQRT2 * (da_dt - kappa * d2a_dx2));
+	                 + M_SQRT2 * (da_dt - kappa * d2a_dx2));
 }
 
 double timestep(const double dx, const double kappa)
@@ -151,8 +151,7 @@ double update(grid<dim,T>& Grid, const unsigned steps, const double dt, const do
 			double y = dx(Grid, 1) * r[1];
 			T phi = Grid(n);
 			newGrid(n) = phi + dt * (- 4 * phi * (phi - 1) * (phi - 0.5) + kappa * laplacian(Grid, n)
-									 + S(A1, A2, B1, B2, C2, kappa, elapsed, x, y));
-			                         //+ source(x, y, elapsed, kappa, C2));
+			                         + S(A1, A2, B1, B2, C2, kappa, elapsed, x, y));
 		}
 
 		swap(Grid, newGrid);
