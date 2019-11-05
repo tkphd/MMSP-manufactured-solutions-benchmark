@@ -5,8 +5,8 @@
 #ifndef ALLENCAHN_UPDATE
 #define ALLENCAHN_UPDATE
 
-#include<cmath>
-#include "mpi.h"
+#include <cmath>
+#include <mpi.h>
 
 #include "MMSP.hpp"
 #include "allen-cahn.hpp"

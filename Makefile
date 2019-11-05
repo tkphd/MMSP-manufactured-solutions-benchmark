@@ -13,8 +13,11 @@ all: allen-cahn $(deps)
 allen-cahn: allen-cahn.cpp main.cpp $(deps)
 	$(compiler) $(flags) $< $(deps) -o $@ $(links)
 
+cluster: allen-cahn.cpp main.cpp $(deps)
+	/cluster/deb9/bin/mpic++ $(flags) -I /cluster/deb9/include $< $(deps) -include mpi.h -o $@ $(links)
+
 manufactured.c: manufactured-sympy.py
 	python $<
 
 clean:
-	rm -vf allen-cahn manufactured.c manufactured.h
+	rm -vf allen-cahn cluster manufactured.c manufactured.h
