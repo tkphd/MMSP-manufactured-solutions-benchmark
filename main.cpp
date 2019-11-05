@@ -207,7 +207,7 @@ void temporal(const char* part, const double kappa, const double C2,
 			    << std::endl;
 		}
 
-		lnT *= dlnT;
+		lnT -= dlnT;
 	}
 
 	if (rank == 0) {
@@ -255,10 +255,10 @@ int main(int argc, char* argv[])
 			spatial(part, kappa, C2, lnX0, lnX1, dlnX, dt);
 		}
 		if (*disc == char(116)  /* "t" */) {
-			const double lnT0 = 8.0;
-			const double lnT1 = 7.0;
-			const double dlnT = 0.985;
-			const unsigned NX = 170;
+			const double lnT0 = 12.1;
+			const double lnT1 = 6.1;
+			const double dlnT = 1.0;
+			const unsigned NX = 250;
 			temporal(part, kappa, C2, NX, lnT0, lnT1, dlnT);
 		}
 	} else if (*part == char(98) /* "b" */) {
