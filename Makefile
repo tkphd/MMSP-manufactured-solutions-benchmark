@@ -2,7 +2,7 @@
 # GNU makefile for PFHub Benchmark 7: Method of Manufactured Solutions
 # Questions/comments to trevor.keller@nist.gov (Trevor Keller)
 
-compiler = /usr/bin/mpic++
+compiler = mpic++
 flags = -O3 -I $(MMSP_PATH)/include -I /usr/include
 deps = manufactured.c
 links = -lz -L /usr/lib/x86_64-linux-gnu -lgsl -lgslcblas

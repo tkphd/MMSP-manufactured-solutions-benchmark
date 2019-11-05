@@ -27,7 +27,7 @@ namespace MMSP
 {
 
 template<int dim, typename T>
-double analyze(grid<dim,T>& Grid, const double elapsed, const double kappa, const double C2)
+double analyze(grid<dim, T>& Grid, const double elapsed, const double kappa, const double C2)
 {
 	int rank = 0;
 	#ifdef MPI_VERSION
@@ -53,7 +53,7 @@ double analyze(grid<dim,T>& Grid, const double elapsed, const double kappa, cons
 }
 
 template<int dim, typename T>
-void bc(grid<dim,T>& Grid)
+void bc(grid<dim, T>& Grid)
 {
 	vector<int> r(dim, 0);
 
@@ -77,8 +77,8 @@ void generate(int dim, const char* filename, const int L, const double kappa, co
 	#ifdef MPI_VERSION
 	rank = MPI::COMM_WORLD.Get_rank();
 	#endif
-	if (dim==2) {
-		GRID2D initGrid(0,0,2*L,0,L);
+	if (dim == 2) {
+		GRID2D initGrid(0, 0, 2 * L, 0, L);
 
 		for (int d = 0; d < dim; d++)
 			dx(initGrid, d) = 1.0 / (2 * L);
@@ -96,16 +96,16 @@ void generate(int dim, const char* filename, const int L, const double kappa, co
 
 		bc(initGrid);
 
-		output(initGrid,filename);
+		output(initGrid, filename);
 	} else {
 		std::cerr << "Error: PFHub Benchmark 7 is 2-D, only." << std::endl;
 	}
 }
 
 template <int dim, typename T>
-double update(grid<dim,T>& Grid, const unsigned steps, const double dt, const double kappa, const double C2)
+double update(grid<dim, T>& Grid, const unsigned steps, const double dt, const double kappa, const double C2)
 {
-	int rank=0;
+	int rank = 0;
 	#ifdef MPI_VERSION
 	rank = MPI::COMM_WORLD.Get_rank();
 	#endif
@@ -115,7 +115,7 @@ double update(grid<dim,T>& Grid, const unsigned steps, const double dt, const do
 	const double LinStab = dx(Grid, 0) * dx(Grid, 1) / kappa;
 	assert(LinStab < 1.0);
 
-	grid<dim,T> newGrid(Grid);
+	grid<dim, T> newGrid(Grid);
 
 	double elapsed = 0.0;
 
@@ -123,7 +123,7 @@ double update(grid<dim,T>& Grid, const unsigned steps, const double dt, const do
 		if (rank == 0)
 			print_progress(step, steps);
 
-		for (int n=0; n<nodes(Grid); n++) {
+		for (int n = 0; n < nodes(Grid); n++) {
 			vector<int> r = position(Grid, n);
 			double x = dx(Grid, 0) * r[0];
 			double y = dx(Grid, 1) * r[1];

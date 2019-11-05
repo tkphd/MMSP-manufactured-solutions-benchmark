@@ -27,9 +27,9 @@ void spatial(const char* part, const double kappa, const double C2,
 	std::string prefix = std::string("bm7") + std::string(part) + std::string("-x");
 
 	std::ofstream ofs;
-	ofs.open((prefix + std::string(".csv")).c_str());
 
 	if (rank == 0) {
+		ofs.open((prefix + std::string(".csv")).c_str());
 		ofs << "NX,"
 		    << "dt,"
 		    << "dx,"
@@ -104,25 +104,20 @@ void spatial(const char* part, const double kappa, const double C2,
 		lnX *= dlnX;
 	}
 
-	ofs.close();
-	ofs.open((prefix + std::string(".log")).c_str());
-
 	if (rank == 0) {
-		double p, b, cov00, cov01, cov11, sumsq;
-		gsl_fit_linear(R.data(), 1, E.data(), 1, R.size(), &p, &b, &cov00, &cov01, &cov11, &sumsq);
+		ofs.close();
+		ofs.open((prefix + std::string(".log")).c_str());
 
-		ofs << "log(E) = p log(R) + b:\n"
-		    << "    p = " << p << '\n'
-		    << "    b = " << b << '\n'
-		    << "    R² = " << sumsq << '\n'
-		    << "    Covariance: "
-		    << cov00 << '\t' << cov01 << '\t' << cov11
-		    << std::endl;
+		double b, m, cov00, cov01, cov11, sumsq;
+		gsl_fit_linear(R.data(), 1, E.data(), 1, R.size(), &b, &m, &cov00, &cov01, &cov11, &sumsq);
+
+		ofs << "Order of accuracy is " << m << " (R² = " << sumsq << ")" << std::endl;
+		ofs.close();
 	}
 }
 
 void temporal(const char* part, const double kappa, const double C2,
-              const double dx, const double lnT0, const double lnT1, const double dlnT)
+              const unsigned NX, const double lnT0, const double lnT1, const double dlnT)
 {
 	int rank = 0;
 	#ifdef MPI_VERSION
@@ -135,9 +130,10 @@ void temporal(const char* part, const double kappa, const double C2,
 	std::string prefix = std::string("bm7") + std::string(part) + std::string("-t");
 
 	std::ofstream ofs;
-	ofs.open((prefix + std::string(".csv")).c_str());
 
 	if (rank == 0) {
+		ofs.open((prefix + std::string(".csv")).c_str());
+
 		ofs << "NX,"
 		    << "dx,"
 		    << "dt,"
@@ -152,7 +148,6 @@ void temporal(const char* part, const double kappa, const double C2,
 
 	std::vector<double> E, R;
 	double lnT(lnT0);
-	const unsigned NX = 1.0 / dx;
 
 	while (lnT > lnT1) {
 		auto start = std::chrono::steady_clock::now();
@@ -215,20 +210,21 @@ void temporal(const char* part, const double kappa, const double C2,
 		lnT *= dlnT;
 	}
 
-	ofs.close();
-	ofs.open((prefix + std::string(".log")).c_str());
-
 	if (rank == 0) {
-		double b, m, cov00, cov01, cov11, sumsq;
-		gsl_fit_linear(R.data(), 1, E.data(), 1, R.size(), &b, &m, &cov00, &cov01, &cov11, &sumsq);
+		ofs.close();
 
-		ofs << "log(E) = p log(R) + b:\n"
-		    << "    p = " << m << '\n'
-		    << "    b = " << b << '\n'
-		    << "    R² = " << sumsq << '\n'
-		    << "    Covariance: "
-		    << cov00 << '\t' << cov01 << '\t' << cov11
-		    << std::endl;
+		ofs.open((prefix + std::string(".log")).c_str());
+
+		if (rank == 0) {
+			ofs.close();
+			ofs.open((prefix + std::string(".log")).c_str());
+
+			double b, m, cov00, cov01, cov11, sumsq;
+			gsl_fit_linear(R.data(), 1, E.data(), 1, R.size(), &b, &m, &cov00, &cov01, &cov11, &sumsq);
+
+			ofs << "Order of accuracy is " << m << " (R² = " << sumsq << ")" << std::endl;
+			ofs.close();
+		}
 	}
 }
 
@@ -252,18 +248,18 @@ int main(int argc, char* argv[])
 		const double C2 = 0.0625 * M_PI;
 
 		if (*disc == char(120) /* "x" */) {
-			const double lnX0 = 5.7041;
-			const double lnX1 = 5.25;
-			const double dlnX = 0.985;
+			const double lnX0 = 5.41654;
+			const double lnX1 = 3.9000;
+			const double dlnX = 0.98;
 			const double dt = 2.0e-4;
 			spatial(part, kappa, C2, lnX0, lnX1, dlnX, dt);
 		}
 		if (*disc == char(116)  /* "t" */) {
-			const double lnT0 = 9.2104;
-			const double lnT1 = 8.0;
+			const double lnT0 = 8.0;
+			const double lnT1 = 7.0;
 			const double dlnT = 0.985;
-			const double dx = 0.0015625;
-			temporal(part, kappa, C2, dx, lnT0, lnT1, dlnT);
+			const unsigned NX = 170;
+			temporal(part, kappa, C2, NX, lnT0, lnT1, dlnT);
 		}
 	} else if (*part == char(98) /* "b" */) {
 		/*
