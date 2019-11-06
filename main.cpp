@@ -34,8 +34,8 @@ void spatial(const char* part, const double kappa, const double C2,
 		ofs.open((prefix + std::string(".csv")).c_str());
 		ofs << "NX,"
 		    << "dt,"
-		    << "dx,"
-		    << "L2,"
+		    << "mesh_size,"
+		    << "L2_error,"
 		    << "lgR,"
 		    << "lgE,"
 		    << "fin,"
@@ -136,8 +136,8 @@ void temporal(const char* part, const double kappa, const double C2,
 
 		ofs << "NX,"
 		    << "dx,"
-		    << "dt,"
-		    << "L2,"
+		    << "time_step,"
+		    << "L2_error,"
 		    << "lgR,"
 		    << "lgE,"
 		    << "fin,"
