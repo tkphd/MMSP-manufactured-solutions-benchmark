@@ -148,6 +148,7 @@ void temporal(const char* part, const double kappa, const double C2,
 
 	std::vector<double> E, R;
 	double lnT(lnT0);
+	int i = 0;
 
 	while (lnT > lnT1) {
 		auto start = std::chrono::steady_clock::now();
@@ -176,36 +177,43 @@ void temporal(const char* part, const double kappa, const double C2,
 
 		const double elapsed = MMSP::update(grid, increment, dt, kappa, C2);
 
-		const double l2 = MMSP::analyze(grid, elapsed, kappa, C2);
-		const double lgE = std::log(l2);
-		const double lgR = std::log(dt);
+		double l20, lgE, lgR;
+		double l2 = MMSP::analyze(grid, elapsed, kappa, C2);
+		if (i == 0) {
+			l20 = l2;
+			i++;
+		} else  {
+			l2 -= l20;
+			lgE = std::log(l2);
+			lgR = std::log(dt);
 
-		E.push_back(lgE);
-		R.push_back(lgR);
+			E.push_back(lgE);
+			R.push_back(lgR);
 
-		// write grid output to file
-		sprintf(filename, "%s-%05u-fin.dat", prefix.c_str(), NT);
-		assert(std::string(filename).length() < 512);
-		MMSP::output(grid, filename);
+			// write grid output to file
+			sprintf(filename, "%s-%05u-fin.dat", prefix.c_str(), NT);
+			assert(std::string(filename).length() < 512);
+			MMSP::output(grid, filename);
 
-		const double gridsize = 2 * (glength(grid, 0) + 2 * ghosts(grid))
-		                        * (glength(grid, 1) + 2 * ghosts(grid))
-		                        * sizeof(double);
+			const double gridsize = 2 * (glength(grid, 0) + 2 * ghosts(grid))
+			                        * (glength(grid, 1) + 2 * ghosts(grid))
+			                        * sizeof(double);
 
-		auto end = std::chrono::steady_clock::now();
+			auto end = std::chrono::steady_clock::now();
 
-		if (rank == 0) {
-			ofs << NX << ','
-			    << MMSP::dx(grid, 0) << ','
-			    << std::setprecision(12)
-			    << dt << ','
-			    << l2 << ','
-			    << lgR << ','
-			    << lgE << ','
-			    << elapsed << ','
-			    << gridsize << ','
-			    << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000.0
-			    << std::endl;
+			if (rank == 0) {
+				ofs << NX << ','
+				    << MMSP::dx(grid, 0) << ','
+				    << std::setprecision(12)
+				    << dt << ','
+				    << l2 << ','
+				    << lgR << ','
+				    << lgE << ','
+				    << elapsed << ','
+				    << gridsize << ','
+				    << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000.0
+				    << std::endl;
+			}
 		}
 
 		lnT *= dlnT;
@@ -251,15 +259,15 @@ int main(int argc, char* argv[])
 		if (*disc == char(120) /* "x" */) {
 			const double lnX0 = 5.41654;
 			const double lnX1 = 3.9000;
-			const double dlnX = 0.98;
+			const double dlnX = 0.99;
 			const double dt = 2.0e-4;
 			spatial(part, kappa, C2, lnX0, lnX1, dlnX, dt);
 		}
 		if (*disc == char(116)  /* "t" */) {
-			const double lnT0 = 6.0365;
-			const double lnT1 = 6.0361;
-			const double dlnT = 0.99999;
-			const unsigned NX = 256;
+			const double lnT0 = 9.0;
+			const double lnT1 = 6.1;
+			const double dlnT = 0.975;
+			const unsigned NX = 64;
 			temporal(part, kappa, C2, NX, lnT0, lnT1, dlnT);
 		}
 	} else if (*part == char(98) /* "b" */) {

@@ -1,3 +1,5 @@
 .#*
+*.dat
+*.png
 allen-cahn
 manufactured.?
