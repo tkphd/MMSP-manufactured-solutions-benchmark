@@ -5,9 +5,11 @@
 #include <cassert>
 #include <cctype>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <fstream>
 #include <gsl/gsl_fit.h>
+#include <iomanip>
 #include <iostream>
 #include <string.h>
 #include <vector>
@@ -74,9 +76,6 @@ void spatial(const char* part, const double kappa, const double C2,
 		const double lgE = std::log(l2);
 		const double lgR = std::log(dx(grid, 0));
 
-		E.push_back(lgE);
-		R.push_back(lgR);
-
 		// write grid output to file
 		sprintf(filename, "%s-%03d-fin.dat", prefix.c_str(), NX);
 		assert(std::string(filename).length() < 512);
@@ -91,6 +90,7 @@ void spatial(const char* part, const double kappa, const double C2,
 		if (rank == 0) {
 			ofs << NX << ','
 			    << dt << ','
+			    << std::setprecision(12)
 			    << MMSP::dx(grid, 0) << ','
 			    << l2 << ','
 			    << lgR << ','
@@ -197,6 +197,7 @@ void temporal(const char* part, const double kappa, const double C2,
 		if (rank == 0) {
 			ofs << NX << ','
 			    << MMSP::dx(grid, 0) << ','
+			    << std::setprecision(12)
 			    << dt << ','
 			    << l2 << ','
 			    << lgR << ','
@@ -255,10 +256,10 @@ int main(int argc, char* argv[])
 			spatial(part, kappa, C2, lnX0, lnX1, dlnX, dt);
 		}
 		if (*disc == char(116)  /* "t" */) {
-			const double lnT0 = 8.0;
-			const double lnT1 = 7.0;
-			const double dlnT = 0.985;
-			const unsigned NX = 170;
+			const double lnT0 = 6.0365;
+			const double lnT1 = 6.0361;
+			const double dlnT = 0.99999;
+			const unsigned NX = 256;
 			temporal(part, kappa, C2, NX, lnT0, lnT1, dlnT);
 		}
 	} else if (*part == char(98) /* "b" */) {

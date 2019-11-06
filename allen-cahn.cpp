@@ -5,8 +5,8 @@
 #ifndef ALLENCAHN_UPDATE
 #define ALLENCAHN_UPDATE
 
-#include<cmath>
-#include "mpi.h"
+#include <cmath>
+#include <mpi.h>
 
 #include "MMSP.hpp"
 #include "allen-cahn.hpp"
@@ -36,6 +36,7 @@ double analyze(grid<dim, T>& Grid, const double elapsed, const double kappa, con
 
 	double l2 = 0.0;
 	const double dV = dx(Grid, 0) * dx(Grid, 1);
+
 	for (int n = 0; n < nodes(Grid); n++) {
 		vector<int> r = position(Grid, n);
 		double x = dx(Grid, 0) * r[0];
@@ -113,7 +114,7 @@ double update(grid<dim, T>& Grid, const unsigned steps, const double dt, const d
 	ghostswap(Grid);
 
 	const double LinStab = dx(Grid, 0) * dx(Grid, 1) / kappa;
-	assert(LinStab < 1.0);
+	assert(LinStab < 0.2);
 
 	grid<dim, T> newGrid(Grid);
 
